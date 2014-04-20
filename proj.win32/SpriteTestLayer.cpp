@@ -53,6 +53,14 @@ bool SpriteTestLayer::init()
     m_grossini->runAction( CCSequence::create(actionMove, 
         actionMoveDone, NULL) );
 
+
+	CCSize szWin = CCDirector::sharedDirector()->getVisibleSize();
+	CCPoint ptCenterOfLayer = CCPointMake(szWin.width/2,szWin.height/2);
+	CCSprite* pShoose = CCSprite::create("xuhong.jpg");
+	pShoose->setPosition(ptCenterOfLayer);
+	this->addChild(pShoose,0,1000);//添加需要拖动的精灵结点
+
+	setTouchEnabled(true);//开启触屏响应
 	return true;
 }
 SpriteTestLayer::~SpriteTestLayer(void)
@@ -63,4 +71,31 @@ void SpriteTestLayer::spriteMoveFinished(CCNode* sender)
 {
 	CCSprite *sprite = (CCSprite *)sender;
 	this->removeChild(sprite, true);
+}
+
+void SpriteTestLayer::registerWithTouchDispatcher()
+{
+	CCDirector::sharedDirector()->getTouchDispatcher()->addTargetedDelegate(this,0,true);
+}
+
+bool SpriteTestLayer::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
+{
+	CCPoint ptClick = pTouch->getLocation();
+	CCNode *pNode = this->getChildByTag(1000);//SSPrite* pSpr = static_cast<CCSprite *>(this->getChildByTag(1000));
+	return pNode->boundingBox().containsPoint(ptClick);//OR pNode->boundingBox().containsPoint(this->convertTouchToNodeSpace(pTouch));判断精灵是否被点击
+}
+void SpriteTestLayer::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent)
+{
+	CCPoint Diff = pTouch->getDelta();
+	CCNode *pNode = this->getChildByTag(1000);
+	CCPoint ptCurrent = pNode->getPosition();
+	pNode->setPosition(ccpAdd(ptCurrent,Diff));
+
+	CCRect reRect = pNode->boundingBox();
+	CCSize szWin = CCDirector::sharedDirector()->getWinSize();
+	CCPoint ptLowerLeft = cocos2d::CCPoint(reRect.origin.x,reRect.origin.y);
+	CCPoint DeltaOfLowerLeft;
+	DeltaOfLowerLeft.x = min(max(reRect.origin.x,0),szWin.width-reRect.size.width)  - ptLowerLeft.x;
+	DeltaOfLowerLeft.y = min(max(reRect.origin.y,0),szWin.height-reRect.size.height)- ptLowerLeft.y;
+	pNode->setPosition(ccpAdd(pNode->getPosition(),DeltaOfLowerLeft));//锚点移动的"差距"和左下角的是一样的
 }
