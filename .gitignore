@@ -30,6 +30,7 @@ proguard/
 *.lo
 *.o
 *.obj
+Debug.win32/
 
 # Compiled Dynamic libraries
 *.so
